@@ -1,0 +1,33 @@
+# API Poller Configuration
+
+eumetsat:
+  api_url: "https://api.eumetsat.int"
+  collection: "EO:EUM:DAT:MSG:HRSEVIRI"
+  # Credentials are loaded from environment variables
+
+roi:
+  name: "Paris"
+  lat_min: 48.5
+  lat_max: 49.2
+  lon_min: 1.8
+  lon_max: 2.9
+
+polling:
+  interval_minutes: 15  # How often to poll
+  lookback_minutes: 30  # How far back to search (30 min window)
+  min_age_hours: 1      # Minimum data age in hours (avoid near-real-time data)
+  initial_delay_seconds: 10
+
+redis:
+  queue_name: "download_queue"
+  max_queue_size: 1000
+
+database:
+  pool_size: 5
+  max_overflow: 10
+
+logging:
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "/logs/api-poller.log"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5

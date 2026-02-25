@@ -1,0 +1,39 @@
+# Processor Configuration
+
+processing:
+  channels: ["HRV"]
+  output_projection: "EPSG:4326"  # WGS84
+  output_resolution: 0.01  # degrees (~1km at Paris latitude)
+  compression_level: 4
+
+roi:
+  name: "Paris"
+  lat_min: 48.5
+  lat_max: 49.2
+  lon_min: 1.8
+  lon_max: 2.9
+  buffer_km: 0  # No buffer for now
+
+quality:
+  max_missing_percentage: 50  # Skip if >50% missing
+  min_solar_zenith: 85  # Skip if SZA > 85° (twilight/night)
+
+storage:
+  raw_path: "/raw"
+  temp_path: "/temp"
+  processed_path: "/processed"
+  delete_raw_after_processing: true
+
+celery:
+  workers: 3
+  max_tasks_per_child: 5  # Restart after 5 tasks to free memory
+  prefetch_multiplier: 1
+
+redis:
+  processing_queue: "processing_queue"
+
+logging:
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "/logs/processor.log"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5

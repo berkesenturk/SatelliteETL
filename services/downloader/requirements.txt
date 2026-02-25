@@ -1,0 +1,33 @@
+# EUMETSAT API Client
+eumdac==3.1.1
+
+# Celery for task queue
+celery==5.3.4
+
+# Redis
+redis==5.0.1
+
+# Database
+psycopg2-binary==2.9.9
+
+# HTTP Client
+requests==2.31.0
+
+# Configuration
+pyyaml==6.0.1
+
+# Monitoring
+prometheus-client==0.19.0
+
+# Progress tracking
+tqdm==4.66.1
+
+# Utilities
+python-dateutil==2.8.2
+
+# Logging
+python-json-logger==2.0.7
+
+# FastAPI for monitoring endpoint
+fastapi==0.104.1
+uvicorn[standard]==0.24.0

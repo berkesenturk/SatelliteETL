@@ -1,0 +1,47 @@
+# Celery for task queue
+celery==5.3.4
+
+# Redis
+redis==5.0.1
+
+# Database
+psycopg2-binary==2.9.9
+
+# Satellite data processing
+satpy==0.45.0
+pyresample==1.28.3
+python-geotiepoints==1.7.3
+
+# Data handling
+xarray==2023.12.0
+netCDF4==1.6.5
+dask==2023.12.1
+numpy==1.26.2
+scipy==1.11.4
+
+# Geospatial
+pyproj==3.6.1
+shapely==2.0.2
+
+# Configuration
+pyyaml==6.0.1
+
+# Monitoring
+prometheus-client==0.19.0
+
+# Progress tracking
+tqdm==4.66.1
+
+# Utilities
+python-dateutil==2.8.2
+
+# Logging
+python-json-logger==2.0.7
+
+# FastAPI for monitoring endpoint
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Image processing (for quicklooks)
+pillow==10.1.0
+matplotlib==3.8.2

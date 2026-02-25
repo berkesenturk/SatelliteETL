@@ -1,0 +1,184 @@
+version: '3.8'
+
+services:
+  # Redis - Message Queue
+  redis:
+    image: redis:7-alpine
+    container_name: seviri-redis
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - seviri-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL - Metadata Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: seviri-postgres
+    environment:
+      - POSTGRES_DB=seviri_pipeline
+      - POSTGRES_USER=seviri
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - seviri-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seviri"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Poller Service
+  api-poller:
+    build:
+      context: ./services/api-poller
+      dockerfile: Dockerfile
+    container_name: seviri-api-poller
+    environment:
+      - EUMETSAT_KEY=${EUMETSAT_KEY}
+      - EUMETSAT_SECRET=${EUMETSAT_SECRET}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=seviri_pipeline
+      - POSTGRES_USER=seviri
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./config/poller.yaml:/app/config/poller.yaml:ro
+      - logs:/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - seviri-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # Downloader Service
+# Downloader Service
+  downloader:
+    build:
+      context: ./services/downloader
+      dockerfile: Dockerfile
+    container_name: seviri-downloader
+    environment:
+      - EUMETSAT_KEY=${EUMETSAT_KEY}
+      - EUMETSAT_SECRET=${EUMETSAT_SECRET}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=seviri_pipeline
+      - POSTGRES_USER=seviri
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - CELERY_WORKERS=${CELERY_WORKERS:-2}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./config/downloader.yaml:/app/config/downloader.yaml:ro
+      - raw-data:/raw
+      - logs:/logs
+    ports:
+      - "8001:8001"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - seviri-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "celery", "-A", "tasks", "inspect", "ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # Processor Service
+  processor:
+    build:
+      context: ./services/processor
+      dockerfile: Dockerfile
+    container_name: seviri-processor
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=seviri_pipeline
+      - POSTGRES_USER=seviri
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - CELERY_WORKERS=${PROCESSOR_WORKERS:-3}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./config/processor.yaml:/app/config/processor.yaml:ro
+      - raw-data:/raw
+      - temp-data:/temp
+      - processed-data:/processed
+      - logs:/logs
+    ports:
+      - "8002:8002"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - seviri-network
+    deploy:
+      resources:
+        limits:
+          cpus: '6'
+          memory: 16G
+    healthcheck:
+      test: ["CMD", "celery", "-A", "tasks", "inspect", "ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+networks:
+  seviri-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  raw-data:
+    driver: local
+  temp-data:
+    driver: local
+  processed-data:
+    driver: local
+  logs:
+    driver: local
