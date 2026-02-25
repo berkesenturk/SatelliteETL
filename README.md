@@ -1,12 +1,14 @@
 # SEVIRI Data Pipeline
 
-Automated pipeline for downloading and processing MSG SEVIRI HRV satellite data for Paris region.
+Automated pipeline for downloading and processing MSG SEVIRI HRV satellite data for ROI.
 
 ## Complete Pipeline
 ```
 EUMETSAT API → Poller → Download Queue → Downloader → /raw → 
 Processing Queue → Processor → /processed
 ```
+
+![diagram](./assets/container_diagram.png)
 
 ### Services
 
@@ -96,3 +98,5 @@ docker exec -it seviri-postgres psql -U seviri -d seviri_pipeline -c \
 - Implement quicklook generation
 - Add email alerts for failures
 - Set up automated backups
+- Cloud Integrations through Terraform/Github Actions
+- Supporting any satellite data from EUMETSAT
