@@ -8,7 +8,7 @@ EUMETSAT API → Poller → Download Queue → Downloader → /raw →
 Processing Queue → Processor → /processed
 ```
 
-![diagram](./assets/container_diagram.png)
+<img src="./assets/container_diagram.png" alt="diagram" width="1200"/>
 
 ### Services
 

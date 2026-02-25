@@ -1,6 +1,7 @@
 # Environment files
 .env
 data/
+
 # Python
 __pycache__/
 *.py[cod]
